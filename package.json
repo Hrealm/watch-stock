@@ -1,8 +1,9 @@
 {
   "name": "watch-stock",
   "displayName": "摸鱼看盘",
+  "icon": "images/logo.jpg",
   "description": "极简股票查看插件，状态栏显示股票信息",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "pbstar",
   "engines": {
     "vscode": "^1.74.0"
@@ -50,7 +51,8 @@
         "watch-stock.refreshInterval": {
           "type": "number",
           "default": 5000,
-          "description": "刷新间隔(毫秒)"
+          "description": "刷新间隔(毫秒)",
+          "minimum": 1000
         },
         "watch-stock.maxDisplayCount": {
           "type": "number",
