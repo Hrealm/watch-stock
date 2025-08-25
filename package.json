@@ -1,0 +1,82 @@
+{
+  "name": "watch-stock",
+  "displayName": "摸鱼看盘",
+  "description": "极简股票查看插件，状态栏显示股票信息",
+  "version": "1.0.0",
+  "publisher": "pbstar",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "scripts": {},
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "watch-stock.addStock",
+        "title": "添加股票"
+      },
+      {
+        "command": "watch-stock.removeStock",
+        "title": "移除股票"
+      },
+      {
+        "command": "watch-stock.clearStocks",
+        "title": "清空股票列表"
+      },
+      {
+        "command": "watch-stock.manageStock",
+        "title": "管理股票"
+      }
+    ],
+    "configuration": {
+      "title": "摸鱼看盘",
+      "properties": {
+        "watch-stock.stocks": {
+          "type": "array",
+          "default": [
+            "000001"
+          ],
+          "description": "股票代码列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "watch-stock.refreshInterval": {
+          "type": "number",
+          "default": 5000,
+          "description": "刷新间隔(毫秒)"
+        },
+        "watch-stock.maxDisplayCount": {
+          "type": "number",
+          "default": 5,
+          "description": "最大显示股票数量"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "iconv-lite": "^0.6.3"
+  },
+  "keywords": [
+    "摸鱼看盘",
+    "stock",
+    "股票",
+    "行情",
+    "finance"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pbstar/watch-stock"
+  },
+  "bugs": {
+    "url": "https://github.com/pbstar/watch-stock/issues"
+  },
+  "homepage": "https://github.com/pbstar/watch-stock#readme"
+}
