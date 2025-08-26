@@ -3,7 +3,7 @@
   "displayName": "摸鱼看盘",
   "icon": "images/logo.jpg",
   "description": "极简股票查看插件，状态栏显示股票信息",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "pbstar",
   "engines": {
     "vscode": "^1.74.0"
@@ -33,6 +33,14 @@
       {
         "command": "watch-stock.manageStock",
         "title": "管理股票"
+      },
+      {
+        "command": "watch-stock.toggleVisibility",
+        "title": "显示/隐藏状态栏"
+      },
+      {
+        "command": "watch-stock.refreshData",
+        "title": "刷新股票数据"
       }
     ],
     "configuration": {

@@ -17,6 +17,7 @@ const iconv = require("iconv-lite");
 let statusBarItem; // 状态栏项
 let refreshInterval; // 刷新定时器
 let stocks = []; // 股票列表
+let isVisible = true; // 是否显示股票信息
 
 /**
  * 插件激活函数
@@ -164,6 +165,21 @@ function activate(context) {
           }
         );
       }
+      // 其他操作
+      options.push(
+        {
+          label: isVisible ? "$(eye-closed) 隐藏状态栏" : "$(eye) 显示状态栏",
+          description: isVisible
+            ? "隐藏状态栏股票信息显示"
+            : "显示状态栏股票信息",
+          action: "toggle",
+        },
+        {
+          label: "$(refresh) 刷新股票数据",
+          description: "立即刷新股票数据",
+          action: "refresh",
+        }
+      );
 
       const selected = await vscode.window.showQuickPick(options, {
         placeHolder:
@@ -195,6 +211,12 @@ function activate(context) {
         case "clear":
           await vscode.commands.executeCommand("watch-stock.clearStocks");
           break;
+        case "toggle":
+          await vscode.commands.executeCommand("watch-stock.toggleVisibility");
+          break;
+        case "refresh":
+          await vscode.commands.executeCommand("watch-stock.refreshData");
+          break;
       }
     }
   );
@@ -202,11 +224,50 @@ function activate(context) {
   // 设置状态栏点击命令为管理股票
   statusBarItem.command = "watch-stock.manageStock";
 
+  // 注册切换显示/隐藏命令
+  const toggleVisibilityCommand = vscode.commands.registerCommand(
+    "watch-stock.toggleVisibility",
+    () => {
+      isVisible = !isVisible;
+      if (isVisible) {
+        vscode.window.showInformationMessage("状态栏股票信息已显示");
+        updateStockInfo();
+      } else {
+        vscode.window.showInformationMessage("状态栏股票信息已隐藏");
+        statusBarItem.text = "$(eye-closed)";
+        statusBarItem.tooltip = "状态栏股票信息已隐藏\n点击后选择‘显示状态栏’";
+      }
+    }
+  );
+
+  // 注册刷新数据命令
+  const refreshDataCommand = vscode.commands.registerCommand(
+    "watch-stock.refreshData",
+    async () => {
+      if (!isVisible) {
+        vscode.window.showWarningMessage(
+          "股票信息已隐藏，请先显示股票信息后再刷新"
+        );
+        return;
+      }
+
+      if (stocks.length === 0) {
+        vscode.window.showInformationMessage("当前没有添加任何股票");
+        return;
+      }
+
+      await updateStockInfo();
+      vscode.window.showInformationMessage("股票数据刷新完成");
+    }
+  );
+
   context.subscriptions.push(statusBarItem);
   context.subscriptions.push(addStockCommand);
   context.subscriptions.push(removeStockCommand);
   context.subscriptions.push(clearStocksCommand);
   context.subscriptions.push(manageStockCommand);
+  context.subscriptions.push(toggleVisibilityCommand);
+  context.subscriptions.push(refreshDataCommand);
 
   // 开始定时更新
   startRefreshTimer();
@@ -262,7 +323,6 @@ async function getStockInfo(input) {
           Buffer.from(searchResponse.data),
           "gbk"
         );
-        console.log("新浪搜索结果:", searchData);
 
         // 解析搜索结果
         const match = searchData.match(/var suggestvalue="([^"]+)"/);
@@ -276,7 +336,6 @@ async function getStockInfo(input) {
             if (stockInfo.length >= 4) {
               const stockCode = stockInfo[2];
               const fullCode = stockInfo[3];
-              const stockName = stockInfo[4] || "";
 
               // 确保是A股股票（过滤掉港股、美股等）
               if (
@@ -287,8 +346,6 @@ async function getStockInfo(input) {
               ) {
                 code = stockCode;
                 market = fullCode.startsWith("sh") ? "sh" : "sz";
-
-                console.log(`找到股票: ${stockName}(${code})`);
                 break; // 找到第一个匹配的A股股票
               }
             }
@@ -316,7 +373,6 @@ async function getStockInfo(input) {
           );
 
           const tencentData = tencentResponse.data;
-          console.log("腾讯搜索结果:", tencentData);
 
           // 腾讯API返回格式：v_hint="中国平安,sh601318,中国平安保险(集团)股份有限公司"
           const tencentMatch = tencentData.match(/v_hint="([^"]+)"/);
@@ -327,7 +383,6 @@ async function getStockInfo(input) {
               if (fullCode.match(/^(sh|sz)[0-9]{6}$/)) {
                 market = fullCode.substring(0, 2);
                 code = fullCode.substring(2);
-                console.log(`腾讯API找到股票: ${parts[0]}(${code})`);
               }
             }
           }
@@ -338,8 +393,6 @@ async function getStockInfo(input) {
 
       // 如果新浪和腾讯API都失败
       if (!code) {
-        console.log("未找到匹配的A股股票");
-
         // 提供更友好的错误提示
         let errorMessage = `股票获取失败："${input}"\n\n`;
         errorMessage += "可能的原因：\n";
@@ -347,7 +400,7 @@ async function getStockInfo(input) {
         errorMessage += "• 该股票不存在或已退市\n";
         errorMessage += "• 网络连接问题\n\n";
         errorMessage += "请尝试：\n";
-        errorMessage += "• 使用股票代码（如：601318）\n";
+        errorMessage += "• 使用股票代码（如：sh601318）\n";
         errorMessage += "• 检查股票名称拼写\n";
         errorMessage += "• 稍后重试";
 
@@ -417,6 +470,11 @@ async function getStockInfo(input) {
  * 获取股票数据并更新状态栏文本和提示信息
  */
 async function updateStockInfo() {
+  // 如果处于隐藏状态，不更新股票信息
+  if (!isVisible) {
+    return;
+  }
+
   const config = vscode.workspace.getConfiguration("watch-stock");
   const maxDisplayCount = config.get("maxDisplayCount", 5);
 
@@ -521,7 +579,7 @@ module.exports = {
 
 /**
  * 判断当前是否为A股交易时间
- * 交易时间：工作日 9:30-11:30 和 13:00-15:00
+ * 交易时间：工作日 9:15-11:30 和 13:00-15:00
  * @returns {boolean} 是否在交易时间内
  */
 function isTradingTime() {
@@ -529,23 +587,23 @@ function isTradingTime() {
   const day = now.getDay();
   const hour = now.getHours();
   const minute = now.getMinutes();
-  
+
   // 周末不交易
   if (day === 0 || day === 6) {
     return false;
   }
-  
+
   // 转换为分钟数便于比较
   const currentMinutes = hour * 60 + minute;
-  
-  // 上午交易时段：9:30-11:30
-  const morningStart = 9 * 60 + 30;
+
+  // 上午交易时段：9:15-11:30
+  const morningStart = 9 * 60 + 15;
   const morningEnd = 11 * 60 + 30;
-  
+
   // 下午交易时段：13:00-15:00
   const afternoonStart = 13 * 60;
   const afternoonEnd = 15 * 60;
-  
+
   return (
     (currentMinutes >= morningStart && currentMinutes <= morningEnd) ||
     (currentMinutes >= afternoonStart && currentMinutes <= afternoonEnd)
