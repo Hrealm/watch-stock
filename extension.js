@@ -450,14 +450,19 @@ async function getStockInfo(input) {
     const change = current - close;
     const changePercent = ((change / close) * 100).toFixed(2);
 
+    // 判断是否为ETF - ETF通常价格较低且名称包含ETF字样
+    const isETF = name.includes('ETF') || (current < 5 && (name.includes('基金') || name.includes('指数')));
+    const priceDecimalPlaces = isETF ? 3 : 2;
+
     return {
       name: name.trim(),
       code: code,
-      current: current.toFixed(2),
-      change: change.toFixed(2),
+      current: current.toFixed(priceDecimalPlaces),
+      change: change.toFixed(priceDecimalPlaces),
       changePercent,
       isUp: change >= 0,
       market: market,
+      isETF: isETF
     };
   } catch (error) {
     console.error("获取股票数据失败:", error.message);
@@ -522,8 +527,7 @@ async function updateStockInfo() {
   let tooltip = validStocks
     .map(
       (stock) =>
-        `${stock.name}(${stock.code}): ${stock.current} ${
-          stock.change >= 0 ? "+" : ""
+        `${stock.name}(${stock.code}): ${stock.current} ${stock.change >= 0 ? "+" : ""
         }${stock.change}(${stock.changePercent}%)`
     )
     .join("\n");
