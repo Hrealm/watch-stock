@@ -62,6 +62,14 @@ cd watch-stock
 
 # 使用VS Code打开
 # 按 F5 启动调试模式
+
+# 打包插件
+npm install -g @vscode/vsce
+vsce package
+
+# 发布插件
+vsce publish
+ovsx publish
 ```
 
 ## 📞 技术支持
