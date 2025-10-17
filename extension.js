@@ -511,11 +511,11 @@ async function updateStockInfo() {
   // 构建状态栏文本
   const stockTexts = displayStocks.map((stock) => {
     const symbol = stock.isUp ? "↗" : "↘";
-    return `${stock.name} ${stock.current} ${symbol}${stock.changePercent}%`;
+    return `${stock.name} ${stock.current} ${stock.changePercent}%`;
   });
 
   // 处理超出显示限制的情况
-  const text = stockTexts.join(" | ");
+  const text = stockTexts.join("   ");
   const finalText =
     validStocks.length > maxDisplayCount
       ? `${text} ...(${validStocks.length - maxDisplayCount}+)`
