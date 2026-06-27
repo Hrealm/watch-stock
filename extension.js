@@ -17,7 +17,7 @@ const iconv = require("iconv-lite");
 let statusBarItem; // 状态栏项
 let refreshInterval; // 刷新定时器
 let stocks = []; // 股票列表
-let isVisible = true; // 是否显示股票信息
+let isVisible = false; // 是否显示股票信息
 
 /**
  * 插件激活函数
